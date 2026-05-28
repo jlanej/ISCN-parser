@@ -1,0 +1,12 @@
+# Files and directories to exclude from the Docker build context.
+.git
+.github
+tests
+**/__pycache__
+*.pyc
+*.egg-info
+.pytest_cache
+.ruff_cache
+build
+dist
+/tmp
