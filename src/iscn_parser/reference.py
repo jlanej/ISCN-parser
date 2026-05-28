@@ -41,7 +41,7 @@ def normalize_chrom(chrom: str) -> str:
 def _load_chrom_table(build: GenomeBuild) -> dict[str, ChromInfo]:
     filename = f"chromosomes_{build.value}.tsv"
     try:
-        text = resources.files("iscn_parser.data").joinpath(filename).read_text()
+        text = resources.files("iscn_parser").joinpath("data", filename).read_text()
     except (FileNotFoundError, ModuleNotFoundError):  # pragma: no cover - defensive
         return {}
     table: dict[str, ChromInfo] = {}
