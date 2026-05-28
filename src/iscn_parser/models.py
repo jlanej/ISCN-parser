@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class GenomeBuild(str, Enum):
@@ -15,7 +14,7 @@ class GenomeBuild(str, Enum):
     NCBI36 = "NCBI36"
 
     @classmethod
-    def from_string(cls, value: Optional[str]) -> Optional["GenomeBuild"]:
+    def from_string(cls, value: str | None) -> GenomeBuild | None:
         """Resolve a build from a free-text token (e.g. ``hg19``), or ``None``."""
         if value is None:
             return None
@@ -48,8 +47,8 @@ class ParseMessage:
 
     severity: Severity
     message: str
-    line: Optional[int] = None
-    text: Optional[str] = None
+    line: int | None = None
+    text: str | None = None
 
     def __str__(self) -> str:  # pragma: no cover - trivial formatting
         loc = f" (line {self.line})" if self.line is not None else ""
@@ -74,13 +73,13 @@ class CopyNumberVariant:
     end: int
     copy_number: int
     sample_id: str = "SAMPLE"
-    build: Optional[GenomeBuild] = None
-    cytoband: Optional[str] = None
+    build: GenomeBuild | None = None
+    cytoband: str | None = None
     score: float = 0.0
     sites: int = 0
-    mosaic_fraction: Optional[float] = None
+    mosaic_fraction: float | None = None
     is_loh: bool = False
-    source: Optional[str] = None
+    source: str | None = None
     notation: str = "array"
 
     @property
@@ -126,6 +125,6 @@ class ParseResult:
         """True when no ERROR-level messages were produced."""
         return not self.errors
 
-    def extend(self, other: "ParseResult") -> None:
+    def extend(self, other: ParseResult) -> None:
         self.variants.extend(other.variants)
         self.messages.extend(other.messages)

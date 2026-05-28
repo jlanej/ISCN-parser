@@ -19,7 +19,6 @@ single bad record never aborts a whole file.
 from __future__ import annotations
 
 import re
-from typing import Optional
 
 from .models import (
     DIPLOID_COPY_NUMBER,
@@ -95,7 +94,7 @@ _DELDUP_RE = re.compile(
 _SEX_RE = re.compile(r"^[XY]+$")
 
 
-def _resolve_cn(cn: str, cn2: Optional[str]) -> tuple[Optional[int], Optional[float]]:
+def _resolve_cn(cn: str, cn2: str | None) -> tuple[int | None, float | None]:
     """Resolve a copy-number token (and optional mosaic upper bound)."""
     if cn == "?":
         return None, None
@@ -103,7 +102,8 @@ def _resolve_cn(cn: str, cn2: Optional[str]) -> tuple[Optional[int], Optional[fl
     if cn2 is not None:
         # Mosaic range "x1~2"; use the value furthest from diploid as the call.
         upper = int(cn2)
-        choice = base if abs(base - DIPLOID_COPY_NUMBER) >= abs(upper - DIPLOID_COPY_NUMBER) else upper
+        far_upper = abs(upper - DIPLOID_COPY_NUMBER) > abs(base - DIPLOID_COPY_NUMBER)
+        choice = upper if far_upper else base
         return choice, None
     return base, None
 
@@ -113,9 +113,9 @@ def _resolve_cn(cn: str, cn2: Optional[str]) -> tuple[Optional[int], Optional[fl
 
 def _parse_array_component(
     component: str,
-    build: Optional[GenomeBuild],
+    build: GenomeBuild | None,
     sample_id: str,
-    line: Optional[int],
+    line: int | None,
 ) -> tuple[list[CopyNumberVariant], list[ParseMessage]]:
     variants: list[CopyNumberVariant] = []
     messages: list[ParseMessage] = []
@@ -210,7 +210,7 @@ def _parse_array_component(
 
 
 def _parse_sex_complement(
-    complement: str, sample_id: str, build: Optional[GenomeBuild], line: Optional[int]
+    complement: str, sample_id: str, build: GenomeBuild | None, line: int | None
 ) -> tuple[list[CopyNumberVariant], list[ParseMessage]]:
     variants: list[CopyNumberVariant] = []
     messages: list[ParseMessage] = []
@@ -250,10 +250,10 @@ def _parse_sex_complement(
 
 def _parse_karyotype_component(
     component: str,
-    build: Optional[GenomeBuild],
+    build: GenomeBuild | None,
     sample_id: str,
-    cytoband: Optional[CytobandTable],
-    line: Optional[int],
+    cytoband: CytobandTable | None,
+    line: int | None,
 ) -> tuple[list[CopyNumberVariant], list[ParseMessage]]:
     variants: list[CopyNumberVariant] = []
     messages: list[ParseMessage] = []
@@ -355,10 +355,10 @@ def _parse_karyotype_component(
 def _resolve_band_region(
     chrom: str,
     band1: str,
-    band2: Optional[str],
-    build: Optional[GenomeBuild],
-    cytoband: Optional[CytobandTable],
-) -> tuple[Optional[tuple[int, int]], bool]:
+    band2: str | None,
+    build: GenomeBuild | None,
+    cytoband: CytobandTable | None,
+) -> tuple[tuple[int, int] | None, bool]:
     """Resolve band(s) to coordinates.
 
     Returns ``(region, exact)`` where ``exact`` is True when band-level
@@ -384,10 +384,10 @@ def _resolve_band_region(
 
 def parse_iscn(
     text: str,
-    build: Optional[GenomeBuild] = None,
+    build: GenomeBuild | None = None,
     sample_id: str = "SAMPLE",
-    cytoband: Optional[CytobandTable] = None,
-    line: Optional[int] = None,
+    cytoband: CytobandTable | None = None,
+    line: int | None = None,
 ) -> ParseResult:
     """Parse a single ISCN string into copy-number variants.
 
@@ -466,8 +466,8 @@ def parse_iscn(
 
 def parse_iscn_file(
     path: str,
-    build: Optional[GenomeBuild] = None,
-    cytoband: Optional[CytobandTable] = None,
+    build: GenomeBuild | None = None,
+    cytoband: CytobandTable | None = None,
     sample_column: int = 0,
     iscn_column: int = 1,
     delimiter: str = "\t",

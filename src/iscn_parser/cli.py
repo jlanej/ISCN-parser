@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import argparse
 import sys
-from typing import Optional
 
 from . import __version__
-from .converters import make_cnv_map, to_bed, to_plink_cnv, to_plink_fam, write_plink
+from .converters import to_bed, to_plink_cnv, write_plink
 from .models import GenomeBuild, Severity
 from .parser import parse_iscn, parse_iscn_file
 from .reference import load_cytoband_file
@@ -92,7 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
     build = None

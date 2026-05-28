@@ -11,9 +11,8 @@ from __future__ import annotations
 import gzip
 import re
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from importlib import resources
-from typing import Optional
 
 from .models import GenomeBuild
 
@@ -38,7 +37,7 @@ def normalize_chrom(chrom: str) -> str:
     return c
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_chrom_table(build: GenomeBuild) -> dict[str, ChromInfo]:
     filename = f"chromosomes_{build.value}.tsv"
     try:
@@ -63,12 +62,12 @@ def _load_chrom_table(build: GenomeBuild) -> dict[str, ChromInfo]:
     return table
 
 
-def chrom_info(chrom: str, build: GenomeBuild) -> Optional[ChromInfo]:
+def chrom_info(chrom: str, build: GenomeBuild) -> ChromInfo | None:
     """Return :class:`ChromInfo` for ``chrom`` in ``build`` (or ``None``)."""
     return _load_chrom_table(build).get(normalize_chrom(chrom))
 
 
-def arm_region(chrom: str, arm: str, build: GenomeBuild) -> Optional[tuple[int, int]]:
+def arm_region(chrom: str, arm: str, build: GenomeBuild) -> tuple[int, int] | None:
     """Return inclusive (start, end) coordinates of a chromosome arm.
 
     ``arm`` is ``"p"`` or ``"q"``. The p arm spans from base 1 to the start of
@@ -101,7 +100,7 @@ class CytobandTable:
     # chrom -> list of (band_name, start_1based, end)
     bands: dict[str, list[tuple[str, int, int]]]
 
-    def band_region(self, chrom: str, band: str) -> Optional[tuple[int, int]]:
+    def band_region(self, chrom: str, band: str) -> tuple[int, int] | None:
         """Resolve a single band (e.g. ``p36.33``) to inclusive coordinates."""
         chrom = normalize_chrom(chrom)
         entries = self.bands.get(chrom)
@@ -116,7 +115,7 @@ class CytobandTable:
             return None
         return (min(s for s, _ in matches), max(e for _, e in matches))
 
-    def range_region(self, chrom: str, band1: str, band2: str) -> Optional[tuple[int, int]]:
+    def range_region(self, chrom: str, band1: str, band2: str) -> tuple[int, int] | None:
         """Resolve a band range (e.g. ``p36.33`` .. ``p36.31``) to coordinates."""
         r1 = self.band_region(chrom, band1)
         r2 = self.band_region(chrom, band2)

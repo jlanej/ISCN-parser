@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Iterable
+from collections.abc import Iterable
 
 from .models import CopyNumberVariant
 
@@ -85,7 +85,9 @@ def make_cnv_map(variants: Iterable[CopyNumberVariant]) -> str:
     return "\n".join(rows) + ("\n" if rows else "")
 
 
-def write_plink(variants: Iterable[CopyNumberVariant], prefix: str, make_map: bool = True) -> list[str]:
+def write_plink(
+    variants: Iterable[CopyNumberVariant], prefix: str, make_map: bool = True
+) -> list[str]:
     """Write ``prefix.cnv``, ``prefix.fam`` and optionally ``prefix.cnv.map``.
 
     Returns the list of written file paths.

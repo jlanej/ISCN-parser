@@ -1,0 +1,9 @@
+# Malformed / edge-case ISCN inputs used to verify graceful error handling.
+# The parser must emit diagnostics for these rather than raising exceptions.
+BAD001	arr[GRCh37] 1p36.33p36.31(849466_6015936)
+BAD002	arr[GRCh37] 1p36.33(abc_def)x1
+BAD003	arr[GRCh37] 99q99.9(1_2)x1
+BAD004	this is not iscn at all
+BAD005	arr[GRCh37] 1p36.33(849466_6015936)x?
+BAD006	46
+BAD007	46,ZZ,+21
