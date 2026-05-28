@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iscn-parser"
+version = "0.1.0"
+description = "Parse ISCN (International System for Human Cytogenomic Nomenclature) results and convert them to PLINK .cnv or BED format."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+authors = [{ name = "ISCN-parser contributors" }]
+keywords = ["ISCN", "cytogenomics", "CNV", "PLINK", "bioinformatics", "karyotype", "microarray"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-cov", "ruff"]
+
+[project.scripts]
+iscn-parser = "iscn_parser.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jlanej/ISCN-parser"
+Repository = "https://github.com/jlanej/ISCN-parser"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+iscn_parser = ["data/*.tsv", "data/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
