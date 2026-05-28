@@ -29,14 +29,17 @@ coordinate-based formats used by downstream genomics pipelines.
   `46,XY,del(5)(p15.2p15.33)`:
   - whole-chromosome aneuploidies (`+21`, `-7`) resolved to full chromosome spans;
   - sex-chromosome complement changes (Turner, Klinefelter, XYY, XXX, …);
-  - `del`/`dup` band events resolved with an optional UCSC cytoBand file
-    (falls back to imprecise arm-level coordinates with a warning otherwise);
+  - `del`/`dup` band events resolved with the bundled UCSC cytoBand files
+    (or a custom file via `--cytoband`; falls back to imprecise arm-level
+    coordinates with a warning when no file is provided);
   - balanced rearrangements (`t`, `inv`, `ins`) recognised as copy-number neutral.
 - **Robust, non-fatal error handling**: malformed records yield diagnostics, not
   crashes, so a single bad line never aborts a whole file.
 - **Outputs**: PLINK `.cnv` (+ companion `.fam` and `.cnv.map`) and colour-coded BED9.
-- **Batteries included**: bundled reference data, example datasets, a CLI, a
-  Python API, a Docker image, and CI covering all the variations above.
+- **Batteries included**: bundled reference data (chromosome lengths, centromere
+  positions, and full UCSC cytoBand tables for GRCh37 and GRCh38), example
+  datasets, a CLI, a Python API, a Docker image, and CI covering all the
+  variations above.
 
 ## Installation
 
@@ -94,7 +97,21 @@ Convert conventional karyotypes (a genome build is required to resolve coordinat
 iscn-parser --input examples/karyotype_samples.tsv --build GRCh37 --output results/kar
 ```
 
-Resolve band-level `del`/`dup` precisely with a UCSC cytoBand file:
+Resolve band-level `del`/`dup` precisely using the bundled cytoBand files:
+
+```bash
+# From a source checkout or editable install:
+iscn-parser --string "46,XY,del(5)(p15.2p15.33)" --build GRCh37 \
+  --cytoband src/iscn_parser/data/cytoBand_GRCh37.txt.gz
+
+# From any install, resolve the bundled file path via Python:
+CYTOBAND=$(python -c "from importlib.resources import files; \
+  print(files('iscn_parser').joinpath('data/cytoBand_GRCh37.txt.gz'))")
+iscn-parser --string "46,XY,del(5)(p15.2p15.33)" --build GRCh37 \
+  --cytoband "$CYTOBAND"
+```
+
+Or supply a custom/updated cytoBand file:
 
 ```bash
 iscn-parser --string "46,XY,del(5)(p15.2p15.33)" --build GRCh37 \
@@ -175,24 +192,38 @@ blue, and copy-neutral LOH green for genome-browser display.
    regions are skipped unless flagged as LOH.
 5. **Karyotype aberrations**: `+N`/`-N` become whole-chromosome gains/losses
    using bundled chromosome lengths; sex-complement changes are computed against
-   the nearest normal complement; `del`/`dup` bands are resolved via a cytoBand
-   table when provided, otherwise via an arm-level approximation (with a
-   warning). Balanced rearrangements are reported as copy-number neutral.
+   the nearest normal complement; `del`/`dup` bands are resolved using the
+   bundled cytoBand table for the detected build (or a custom file supplied via
+   `--cytoband`), falling back to an arm-level approximation with a warning
+   when no matching band is found. Balanced rearrangements are reported as
+   copy-number neutral.
 6. **Coordinate model.** Internally all events are 1-based inclusive; BED output
    converts to 0-based half-open at the boundary.
 
 ### Reference data
 
-Chromosome lengths and (approximate) centromere boundaries for **GRCh37** and
-**GRCh38** are bundled in `src/iscn_parser/data/`. These support whole-chromosome
-and arm-level resolution offline. For exact band-level coordinates supply a UCSC
-`cytoBand.txt`/`cytoBand.txt.gz` file via `--cytoband`. Centromere coordinates
-are approximate and intended for arm-level fallback only.
+Chromosome lengths, approximate centromere boundaries, and full **UCSC cytoBand
+tables** for **GRCh37** and **GRCh38** are bundled in `src/iscn_parser/data/`:
+
+| File | Purpose |
+|------|---------|
+| `chromosomes_GRCh37.tsv` | Chromosome lengths + centromere positions (GRCh37) |
+| `chromosomes_GRCh38.tsv` | Chromosome lengths + centromere positions (GRCh38) |
+| `cytoBand_GRCh37.txt.gz` | Full UCSC cytoBand table for GRCh37/hg19 (862 bands) |
+| `cytoBand_GRCh38.txt.gz` | Full UCSC cytoBand table for GRCh38/hg38 (1549 bands) |
+
+Whole-chromosome and arm-level events are resolved from the chromosome tables
+alone. The bundled cytoBand files enable **exact band-level coordinate
+resolution** for `del`/`dup` karyotype events without any external downloads.
+You can also supply a custom or updated cytoBand file via `--cytoband` if
+needed; the script used to download the originals from UCSC is available at
+`scripts/download_cytobands.py`.
 
 ## Limitations
 
-- Band-level conventional events without a cytoBand file fall back to whole-arm
-  coordinates and are flagged with a warning.
+- Band-level conventional events fall back to whole-arm coordinates (with a
+  warning) only when neither the bundled cytoBand files nor a custom file can
+  resolve the requested bands.
 - Balanced translocations/inversions carry no copy-number change and so produce
   no CNV records by design.
 - Complex constructs (derivative chromosomes, marker chromosomes, ring
@@ -207,7 +238,9 @@ pytest
 ```
 
 The test suite (`tests/`) exercises array, karyotype, malformed, converter,
-CLI, and reference-data behaviour, and ships extensive example data under
+CLI, reference-data, and **full cytoband** behaviour (loading, band/range
+lookups, integration with the bundled GRCh37/GRCh38 cytoBand files, and
+CLI `--cytoband` flag), and ships extensive example data under
 `tests/data/` and `examples/`.
 
 ## License
